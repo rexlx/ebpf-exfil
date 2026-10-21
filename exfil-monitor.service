@@ -1,0 +1,30 @@
+[Unit]
+Description=eBPF Real-time Exfiltration Detection Monitor
+Documentation=https://github.com/cilium/ebpf
+After=network.target sys-kernel-tracing.mount
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+# Use -syslog=local (or configure -syslog=remote -syslog-addr=...)
+# ExecStart=/usr/local/bin/exfil-monitor -syslog=local
+ExecStart=/usr/local/bin/exfil-monitor -syslog remote -syslog-addr 192.168.86.120:514 -syslog-proto udp
+
+Restart=always
+RestartSec=3s
+
+# Required privileges for eBPF memory allocation and tracepoint binding
+LimitMEMLOCK=infinity
+CapabilityBoundingSet=CAP_BPF CAP_PERFMON CAP_SYS_RESOURCE CAP_DAC_READ_SEARCH
+AmbientCapabilities=CAP_BPF CAP_PERFMON CAP_SYS_RESOURCE CAP_DAC_READ_SEARCH
+
+# Process isolation sandboxing
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
